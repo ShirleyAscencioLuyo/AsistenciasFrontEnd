@@ -1,0 +1,102 @@
+<div class="container-sm">
+
+  <div class="my-3 p-3 bg-body rounded shadow-sm">
+    <h5 class="border-bottom pb-2 mb-0">Asistencia de docentes</h5>
+    <div class="row mt-3">
+      <div class="col-md-5">
+        <div class="input-group mb-3">
+          <span class="input-group-text" id="basic-addon1"><i class='bx bx-search-alt-2'></i></span>
+          <input type="search" class="form-control" placeholder="Buscar..." id="idBuscarProfesor">
+        </div>
+      </div>
+
+      <div class="col">
+        <select class="form-select" id="idSelectTurno" (change)="filtraTurno($event)">
+          <option value="M">Mañana</option>
+          <option value="T">Tarde</option>
+        </select>
+      </div>
+
+      <div class="col">
+        <div class="input-group mb-2">
+          <input type="date" class="form-control" [value]="currentDate" (change)="filtrarFecha($event)"
+            [max]="maxDate | date:'yyyy-MM-dd'">
+        </div>
+      </div>
+      <div class="col">
+        <button type="button" class="btn btn-primary" id="btnNuevo" (click)="guardarAsistencia()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-sm table-hover">
+    <thead>
+      <tr>
+        <th scope="col">N° Doc</th>
+        <th scope="col">Docente</th>
+        <th scope="col">Cargo</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Hor. entrada</th>
+        <th scope="col">Hor. salida</th>
+        <th scope="col">Observación</th>
+      </tr>
+    </thead>
+    <tbody [formGroup]="form">
+      <ng-container formArrayName="teacherWithAttendance">
+        <ng-container *ngFor="let teacher of teacherWithAttendance.controls; let index = index">
+          <tr [formGroupName]="index">
+            <td scope="row">{{teacher.get('documentNumber')?.value}}</td>
+            <td>{{teacher.get('lastname')?.value + ' ' + teacher.get('name')?.value}}</td>
+            <td>{{teacher.get('typeCharge')?.value}}</td>
+            <td>
+              <select class="form-select form-select-sm" formControlName="attendanceStatus">
+                <option value="A">Asistio</option>
+                <option value="F">Falto</option>
+                <option value="J">Justificado</option>
+                <option value="L">Licencia</option>
+                <option value="P">Permiso</option>
+                <option value="T">Tardanza</option>
+                <option value="V">Vacaciones</option>
+                <option value="H">Huelga</option>
+              </select>
+            </td>
+            <td>
+              <input type="time" class="form-control form-control-sm" min="07:00:00" max="09:00:00"
+                formControlName="entryTime">
+            </td>
+            <td>
+              <input type="time" class="form-control form-control-sm" min="13:00" max="14:30"
+                formControlName="exitTime">
+            </td>
+            <td class="text-center">
+              <a class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#observacionModal"
+                (click)="mostrarObservacion(teacher, index)">
+                <i class='bx bxs-comment-dots' ></i>
+              </a>
+            </td>
+          </tr>
+        </ng-container>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true"
+  data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="observacionModalLabel">Observación</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea class="form-control" rows="3" [value]="observacion"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>

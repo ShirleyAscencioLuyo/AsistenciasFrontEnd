@@ -1,0 +1,88 @@
+<div class="container-sm move-down">
+    <!-- Card de datos de entrada -->
+    <div class="my-3 p-3 bg-body rounded shadow-sm">
+      <h5 class="border-bottom pb-2 mb-0">Registro de asistencia de los docentes</h5>
+      <div class="row mt-3">
+        <div class="col-md-5">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="btnBuscar"><i class='bx bx-search-alt-2'></i></span>
+            <input type="search" class="form-control" placeholder="Buscar..."
+              >
+          </div>
+        </div>
+        <div class="col">
+          <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal"
+            data-bs-target="#estudianteModalS">Agregar</button>
+        </div>
+      </div>
+    </div>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">Turno</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Apellido</th>
+          <th scope="col">Hora de Entrada</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Observaciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let assistance of assistanceStudent">
+          <td>{{ assistance.shifts }}</td>
+          <td>{{ assistance.teacher.name }}</td>
+          <td>{{ assistance.teacher.lastname }}</td>
+          <td>{{ assistance.input }}</td>
+          <td>{{ assistance.states}}</td>
+          <td>{{ assistance.observations }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- Modal Crear -->
+  <div class="modal fade" id="estudianteModalS" tabindex="-1" aria-labelledby="estudianteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="estudianteModalLabel">Registro de asistencia</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form form (ngSubmit)="createAssistance()" [formGroup]="formAssistance">
+            <div class="col-md-6 input-group-sm">
+              <label for="student" class="form-label">Estudiante</label>
+              <select class="form-select" aria-label="Seleccionar" id="student" formControlName="student">
+                <option value="">Seleccione estudiante</option>
+                <option *ngFor="let docente of docentes" [ngValue]="docente">{{ docente.name }} {{ docente.lastname }}</option>
+              </select>
+            </div>
+            <div class="col-md-6 input-group-sm">
+              <label for="input" class="form-label">Hora de entrada</label>
+              <input type="text" class="form-control" id="input" formControlName="input">
+            </div>
+            <div class="col-md-6 input-group-sm">
+              <label for="states" class="form-label">Estado</label>
+              <select class="form-select" aria-label="Seleccionar" id="states" formControlName="states">
+                <option value="A">A</option>
+                <option value="I">I</option>
+                <option value="J">J</option>
+                <option value="T">T</option>
+              </select>
+            </div>
+            <div class="col-md-6 input-group-sm">
+              <label for="shifts" class="form-label">Turno</label>
+              <select class="form-select" aria-label="Seleccionar" id="shifts" formControlName="shifts">
+                <option value="M">M</option>
+                <option value="T">T</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="observation" class="form-label">Descripcion</label>
+              <textarea class="form-control" id="observation" formControlName="observation" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Registrar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>

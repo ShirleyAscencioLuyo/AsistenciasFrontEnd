@@ -1,0 +1,271 @@
+<div class="container-sm move-down">
+  <!-- Card de datos de entrada -->
+  <div class="my-9 p-3 bg-body rounded shadow-sm">
+    <h5 class="border-bottom pb-2 mb-3">Lista de Registros</h5>
+    <div class="row align-items-center mb-2">
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text" id="btnBuscar"><i class="bx bx-search-alt-2"></i></span>
+          <input type="search" class="form-control" placeholder="Buscar..." [(ngModel)]="searchQuery"
+            (input)="onSearch()">
+        </div>
+      </div>
+      <div class="col">
+        <select class="form-select" id="searchField" name="searchField" [(ngModel)]="selectedDocumentType"
+          (change)="onSearch()">
+          <option value="" selected>Tipo Documento</option>
+          <option value="DNI">DNI</option>
+          <option value="CE ">CE </option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="checkbox" id="chkInactivos" [(ngModel)]="Active"
+            (change)="ActiveStatus()">
+          <label class="form-check-label" for="chkInactivos">{{ Active ? 'Activos' : 'Inactivos' }}</label>
+        </div>
+      </div>
+      <div class="col-md-1 text-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+          data-bs-target="#profesorModal">Agregar</button>
+      </div>
+      <!-- Botones de Exportación -->
+      <div class="col-md-1 text-end">
+        <button type="button" class="btn btn-success" (click)="exportToXLS()">
+          <fa-icon [icon]="faFileExcel"></fa-icon> XLS
+        </button>
+      </div>
+      <div class="col-md-1 text-end">
+        <button type="button" class="btn btn-info" (click)="exportToCSV()">
+          <fa-icon [icon]="faFileCsv"></fa-icon> CSV
+        </button>
+      </div>
+      <div class="col-md-1 text-end">
+        <button type="button" class="btn btn-warning" (click)="exportToPDF()" [disabled]="descargandoPdf">
+          <ng-container *ngIf="!descargandoPdf">
+            <fa-icon [icon]="faFilePdf"></fa-icon> PDF
+          </ng-container>
+          <ng-container *ngIf="descargandoPdf">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span class="sr-only">Loading...</span> PDF
+          </ng-container>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Listado de registros -->
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col" class="text-center">Apellidos</th>
+        <th scope="col" class="text-center">Nombres</th>
+        <th scope="col" class="text-center">Tipo Doc.</th>
+        <th scope="col" class="text-center">N° Doc.</th>
+        <th scope="col" class="text-center">Celular</th>
+        <th scope="col" class="text-center">Correo</th>
+        <th scope="col" class="text-center">Fec. Nacimiento</th>
+        <th scope="col" class="text-center">Ubigeo</th>
+        <th scope="col" class="text-center">Tipo de Cargo</th>
+        <th scope="col" class="text-center">Tipo de Condicion</th>
+        <th scope="col" class="text-center">Horas Trabajo</th>
+        <th scope="col" class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let teacher of teachers">
+        <td class="text-center">{{ teacher.lastname }}</td>
+        <td class="text-center">{{ teacher.name }}</td>
+        <td class="text-center">{{ teacher.documentType.nameDocument }}</td>
+        <td class="text-center">{{ teacher.documentNumber }}</td>
+        <td class="text-center">{{ teacher.cellphone }}</td>
+        <td class="text-center">{{ teacher.email }}</td>
+        <td class="text-center">{{ teacher.birthdate | date: 'dd-MMM-yyyy' }}</td>
+        <td class="text-center">{{ teacher.ubigeo.department }} - {{ teacher.ubigeo.province }} - {{ teacher.ubigeo.district }}</td>
+        <td class="text-center">{{ teacher.typeCharge }}</td>
+        <td class="text-center">{{ teacher.typeCondition }}</td>
+        <td class="text-center">{{ teacher.workday }}</td>
+        <td>
+          <div class="selected-gender">
+            <!-- icono para Editar -->
+            <span *ngIf="Actions">
+              <button type="button" class="btn btn-outline-warning action-btn" data-bs-toggle="modal"
+                data-bs-target="#profesorModal" (click)="editTeacher(teacher)">
+                <i class='bx bxs-edit-alt'></i>
+              </button>
+            </span>
+            <!-- icono para Eliminar -->
+            <span *ngIf="Actions" (click)="deleteTeacher(teacher.id)">
+              <button type="button" class="btn btn-outline-danger action-btn">
+                <i class='bx bxs-trash'></i>
+              </button>
+            </span>
+            <!-- icono para Reactivar -->
+            <span *ngIf="!Actions" (click)="activateTeacher(teacher.id)">
+              <button type="button" class="btn btn-outline-success action-btn">
+                <i class='bx bx-check-double'></i>
+              </button>
+            </span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <!-- Formulario para crear Profesor -->
+  <div class="modal fade" id="profesorModal" tabindex="-1" aria-labelledby="profesorModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="profesorModalLabel">{{service.teacherSelected && service.teacherSelected.id ?
+            'Actualizar Registro': 'Nuevo Registro' }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+            (click)="editCancel()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formTeacher" (ngSubmit)="onSubmit()" class="row">
+            <input type="hidden" id="accion" name="accion"> <input type="hidden" class="form-control" id="frmId">
+            <div class="col-md-5 input-group-sm">
+              <label for="documentType" class="form-label">Tipo documento*</label>
+              <select class="form-select" aria-label="Seleccionar" id="documentType" (change)="selectOnChange($event)"
+                formControlName="documentType" [ngClass]="{ 'is-valid': formTeacher.get('documentType')?.valid && formTeacher.get('documentType')?.touched,
+              'is-invalid': formTeacher.get('documentType')?.invalid && formTeacher.get('documentType')?.touched}">
+                <option *ngFor="let docType of documentTypes" [value]="docType.id">{{ docType.nameDocument }}</option>
+              </select>
+              <div
+                *ngIf="formTeacher.get('documentType')?.hasError('required') && formTeacher.get('documentType')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+            </div>
+
+            <div class="col-md-7 input-group-sm">
+              <label for="documentNumber" class="form-label">N° Documento*</label>
+              <input type="text" class="form-control" id="documentNumber" formControlName="documentNumber" (keypress)="numberOnly($event)" [maxlength]="maxLengthDocumentNumber"
+                [ngClass]="{ 'is-valid': formTeacher.get('documentNumber')?.valid && formTeacher.get('documentNumber')?.touched,
+                       'is-invalid': formTeacher.get('documentNumber')?.invalid && formTeacher.get('documentNumber')?.touched}" required>
+              <div
+                *ngIf="formTeacher.get('documentNumber')?.hasError('required') && formTeacher.get('documentNumber')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Número de documento es
+                obligatorio.</div>
+              <div
+                *ngIf="formTeacher.get('documentNumber')?.hasError('pattern') && formTeacher.get('documentNumber')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Solo se permiten números.
+              </div>
+            </div>
+
+            <div class="col-md-12 input-group-sm">
+              <label for="name" class="form-label">Nombres*</label>
+              <input type="text" class="form-control" id="name" formControlName="name" [ngClass]="{'is-valid': formTeacher.get('name')?.valid && formTeacher.get('name')?.touched,
+                                 'is-invalid': formTeacher.get('name')?.invalid && formTeacher.get('name')?.touched }" style="text-transform: uppercase;" onkeypress="return (event.charCode == 209 || event.charCode == 241 || (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122))">
+              <div *ngIf="formTeacher.get('name')?.hasError('required') && formTeacher.get('name')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+              <div *ngIf="formTeacher.get('name')?.hasError('pattern')" class="error-message"
+                style="color: red; font-size: 12px; text-align: right;">Solo se permiten letras.</div>
+            </div>
+            <div class="col-md-12 input-group-sm">
+              <label for="lastname" class="form-label">Apellidos*</label>
+              <input type="text" class="form-control" id="lastname" formControlName="lastname"
+                [ngClass]="{'is-valid': formTeacher.get('lastname')?.valid && formTeacher.get('lastname')?.touched,
+                                 'is-invalid': formTeacher.get('lastname')?.invalid && formTeacher.get('lastname')?.touched }" style="text-transform: uppercase;" onkeypress="return (event.charCode == 209 || event.charCode == 241 || (event.charCode >= 65 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122))">
+              <div *ngIf="formTeacher.get('lastname')?.hasError('required') && formTeacher.get('lastname')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+              <div *ngIf="formTeacher.get('lastname')?.hasError('pattern')" class="error-message"
+                style="color: red; font-size: 12px; text-align: right;">Solo se permiten letras.</div>
+            </div>
+
+            <div class="col-md-5 input-group-sm">
+              <label for="cellphone" class="form-label">Telefono</label>
+              <input type="text" class="form-control" id="cellphone" formControlName="cellphone" [ngClass]="{ 'is-valid': formTeacher.get('cellphone')?.valid && formTeacher.get('cellphone')?.touched,
+                'is-invalid': formTeacher.get('cellphone')?.invalid && formTeacher.get('cellphone')?.touched}" (keypress)="validationCellphone($event)" maxlength="9" pattern="^9\d{8}$">
+              <div *ngIf="formTeacher.get('cellphone')?.hasError('required') && formTeacher.get('cellphone')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Número de documento
+                obligatorio.</div>
+              <div *ngIf="formTeacher.get('cellphone')?.hasError('pattern') && formTeacher.get('cellphone')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: center;">Solo permite numeros de 9 digitos e inicien en 9
+              </div>
+            </div>
+            <div class="col-md-7 input-group-sm">
+              <label for="email" class="form-label">Correo</label>
+              <input type="text" class="form-control" id="email" formControlName="email" [ngClass]="{ 'is-valid': formTeacher.get('email')?.valid && formTeacher.get('email')?.touched,
+                'is-invalid': formTeacher.get('email')?.invalid && formTeacher.get('email')?.touched}" placeholder="joe.doe@vallegrande.edu.pe" onkeypress="return ((event.charCode >= 48 && event.charCode <= 57) || (event.charCode >= 64 && event.charCode <= 90) || (event.charCode >= 97 && event.charCode <= 122)||(event.charCode>=46))">
+              <div *ngIf="formTeacher.get('email')?.hasError('required') && formTeacher.get('email')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Correo es obligatorio.
+              </div>
+              <div *ngIf="formTeacher.get('email')?.hasError('email') && formTeacher.get('email')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Correo no tiene un formato
+                válido.</div>
+            </div>
+
+            <div class="col-md-12 input-group-sm">
+              <label for="birthdate" class="form-label">Fecha de nacimiento:</label>
+              <input type="date" class="form-control" id="birthdate" formControlName="birthdate"
+                [ngClass]="{'is-valid': formTeacher.get('birthdate')?.valid && formTeacher.get('birthdate')?.touched,
+                                 'is-invalid': formTeacher.get('birthdate')?.invalid && formTeacher.get('birthdate')?.touched }" [max]="minDate | date:'yyyy-MM-dd'">
+              <div *ngIf="formTeacher.get('birthdate')?.hasError('required') && formTeacher.get('birthdate')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+            </div>
+
+            <div class="col-md-6 input-group-sm">
+              <label for="ubigeo" class="form-label">Ubigeo</label>
+              <select class="form-select" aria-label="Seleccionar" id="ubigeo"
+                formControlName="ubigeo" [ngClass]="{ 'is-valid': formTeacher.get('ubigeo')?.valid && formTeacher.get('ubigeo')?.touched,
+                       'is-invalid': formTeacher.get('ubigeo')?.invalid && formTeacher.get('ubigeo')?.touched}"
+                required>
+                <option *ngFor="let ubigeoItem of ubigeos" [value]="ubigeoItem.id">{{ubigeoItem.department}}-{{ubigeoItem.province}}-{{ubigeoItem.district}}</option>
+              </select>
+              <div *ngIf="formTeacher.get('ubigeo')?.hasError('required') && formTeacher.get('ubigeo')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+            </div>
+
+            <div class="col-md-6 input-group-sm">
+              <label for="typeCharge" class="form-label">Cargo:</label>
+              <select class="form-select" aria-label="Seleccionar" id="typeCharge" formControlName="typeCharge"
+                [ngClass]="{ 'is-valid': formTeacher.get('typeCharge')?.valid && formTeacher.get('typeCharge')?.touched,
+                       'is-invalid': formTeacher.get('typeCharge')?.invalid && formTeacher.get('typeCharge')?.touched}"
+                required>
+                <option value="Director">Director</option>
+                <option value="Docente">Doc. por horas</option>
+                <option value="Jeie de taller">Jeie de taller</option>
+                <option value="Doc. por horas">Auxiliar</option>
+                <option value="Auxiliar">Docente</option>
+              </select>
+              <div *ngIf="formTeacher.get('typeCharge')?.hasError('required') && formTeacher.get('typeCharge')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+            </div>
+
+            <div class="col-md-6 input-group-sm">
+              <label for="typeCondition" class="form-label">Condición:</label>
+              <select class="form-select" aria-label="Seleccionar" id="typeCondition" formControlName="typeCondition"
+                [ngClass]="{ 'is-valid': formTeacher.get('typeCondition')?.valid && formTeacher.get('typeCondition')?.touched,
+                       'is-invalid': formTeacher.get('typeCondition')?.invalid && formTeacher.get('typeCondition')?.touched}"
+                required>
+                <option value="Nombrado">Nombrado</option>
+                <option value="Encargado">Encargado</option>
+                <option value="Contratado">Contratado</option>
+              </select>
+              <div
+                *ngIf="formTeacher.get('typeCondition')?.hasError('required') && formTeacher.get('typeCondition')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+            </div>
+
+            <div class="col-md-6 input-group-sm">
+              <label for="workday" class="form-label">Jornada laboral:</label>
+              <input type="number" class="form-control" id="workday" formControlName="workday" [ngClass]="{ 'is-valid': formTeacher.get('workday')?.valid && formTeacher.get('workday')?.touched,
+                       'is-invalid': formTeacher.get('workday')?.invalid && formTeacher.get('workday')?.touched}" placeholder="Menor o igual a 40 Horas"
+                required>
+              <div *ngIf="formTeacher.get('workday')?.hasError('required') && formTeacher.get('workday')?.touched"
+                class="error-message" style="color: red; font-size: 12px; text-align: right;">Campo obligatorio</div>
+            </div>
+            <div class="modal-footer mt-4">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnCancelar"
+                (click)="editCancel()">Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="btnGuardar" data-bs-dismiss="modal"
+                [disabled]="!formTeacher.valid">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
